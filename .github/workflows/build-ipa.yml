@@ -12,13 +12,36 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Fix project.yml encoding
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          path = Path("project.yml")
+          data = path.read_bytes()
+          text = None
+
+          if data.startswith(b"\xff\xfe"):
+              text = data.decode("utf-16-le")
+          elif data.startswith(b"\xfe\xff"):
+              text = data.decode("utf-16-be")
+          elif data.startswith(b"\xef\xbb\xbf"):
+              text = data[3:].decode("utf-8")
+          else:
+              try:
+                  text = data.decode("utf-8")
+              except UnicodeDecodeError:
+                  text = data.decode("utf-16-le")
+
+          path.write_text(text.replace("\r\n", "\n"), encoding="utf-8")
+          print(path.read_text(encoding="utf-8")[:200])
+          PY
+
       - name: Install XcodeGen
         run: brew install xcodegen
 
       - name: Generate Xcode project on Mac
         run: |
-          ls -la
-          test -f project.yml
           xcodegen generate
           ls -la CellNetMonitor.xcodeproj
           xcodebuild -list -project CellNetMonitor.xcodeproj
