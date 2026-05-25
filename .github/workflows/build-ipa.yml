@@ -12,8 +12,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode.app
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project on Mac
+        run: |
+          ls -la
+          test -f project.yml
+          xcodegen generate
+          ls -la CellNetMonitor.xcodeproj
+          xcodebuild -list -project CellNetMonitor.xcodeproj
 
       - name: Build unsigned app for device
         run: |
@@ -24,12 +32,12 @@ jobs:
             -configuration Release \
             -sdk iphoneos \
             -derivedDataPath build/DerivedData \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="-" \
             CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
             ONLY_ACTIVE_ARCH=NO \
             COMPILER_INDEX_STORE_ENABLE=NO \
-            build
+            build 2>&1 | tee build.log
 
       - name: Package IPA
         run: |
@@ -44,7 +52,6 @@ jobs:
           cp -R "$APP_PATH" dist/Payload/
           cd dist
           zip -qr CellNetMonitor-unsigned.ipa Payload
-          cd ..
           ls -lh dist/
 
       - name: Upload IPA artifact
@@ -53,3 +60,10 @@ jobs:
           name: CellNetMonitor-ipa
           path: dist/CellNetMonitor-unsigned.ipa
           if-no-files-found: error
+
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log
