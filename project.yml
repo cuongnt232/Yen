@@ -28,7 +28,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.cellnet.monitor
         SWIFT_OBJC_BRIDGING_HEADER: CellNetMonitor/CellNetMonitor-Bridging-Header.h
-        HEADER_SEARCH_PATHS: $(SRCROOT)/CellNetMonitor/Bridge/Headers
+        HEADER_SEARCH_PATHS: $(SRCROOT)/CellNetMonitor/Bridge $(SRCROOT)/CellNetMonitor/Bridge/Headers
         LD_RUNPATH_SEARCH_PATHS: $(inherited) @executable_path/Frameworks
         MARKETING_VERSION: "1.0"
         CURRENT_PROJECT_VERSION: "1"
